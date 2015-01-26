@@ -22,7 +22,7 @@ class SwaggerApi {
 
         $url = $url . '?'. http_build_query($query);
         
-        $this->client->request($method, , json_encode($body));
+        $this->client->request($method, $url, json_encode($body));
     }
 
 }

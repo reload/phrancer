@@ -1,0 +1,19 @@
+{
+    "name": "reload/phrancer",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kasper Garnaes",
+            "email": "kasper.garnaes@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "reload\\phrancer\\": "src/"
+        }
+    },
+    "require": {
+        "thefrozenfire/swagger": "dev-master@dev",
+        "zendframework/zend-code": "~2.3"
+    }
+}

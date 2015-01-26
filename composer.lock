@@ -4,20 +4,20 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ea31d758e9787a13278c3945b982385d",
+    "hash": "b15f663a8282f9322142c54c37dd98ff",
     "packages": [
         {
             "name": "thefrozenfire/swagger",
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/TheFrozenFire/PHP-Swagger-Parser.git",
-                "reference": "cec9bcbeaf4c641e71579f614a12c6fffdac2e6d"
+                "url": "https://github.com/reload/PHP-Swagger-Parser.git",
+                "reference": "e3969ce0b1b7ef6a7c8dc90d3954ca4698d67e4b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/TheFrozenFire/PHP-Swagger-Parser/zipball/cec9bcbeaf4c641e71579f614a12c6fffdac2e6d",
-                "reference": "cec9bcbeaf4c641e71579f614a12c6fffdac2e6d",
+                "url": "https://api.github.com/repos/reload/PHP-Swagger-Parser/zipball/e3969ce0b1b7ef6a7c8dc90d3954ca4698d67e4b",
+                "reference": "e3969ce0b1b7ef6a7c8dc90d3954ca4698d67e4b",
                 "shasum": ""
             },
             "require-dev": {
@@ -32,17 +32,17 @@
                     "tests/"
                 ]
             },
-            "notification-url": "https://packagist.org/downloads/",
             "authors": [
                 {
                     "name": "Justin Martin",
-                    "email": "frozenfire@thefrozenfire.com",
-                    "homepage": "https://github.com/TheFrozenFire",
-                    "role": "Developer"
+                    "email": "frozenfire@thefrozenfire.com"
                 }
             ],
             "description": "Swagger parser for PHP",
-            "time": "2013-10-18 23:38:51"
+            "support": {
+                "source": "https://github.com/reload/PHP-Swagger-Parser/tree/master"
+            },
+            "time": "2015-01-26 12:34:49"
         },
         {
             "name": "zendframework/zend-code",

@@ -12,6 +12,13 @@
             "reload\\phrancer\\": "src/"
         }
     },
+    "repositories":
+    [
+        {
+            "type": "vcs",
+            "url": "https://github.com/reload/PHP-Swagger-Parser"
+        }
+    ],
     "require": {
         "thefrozenfire/swagger": "dev-master@dev",
         "zendframework/zend-code": "~2.3"

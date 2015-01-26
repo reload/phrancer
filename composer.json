@@ -12,15 +12,42 @@
             "reload\\phrancer\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "reload\\phrancer\\": "tests/"
+        }
+    },
     "repositories":
     [
         {
             "type": "vcs",
             "url": "https://github.com/reload/PHP-Swagger-Parser"
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "swagger/swagger-spec",
+                "version": "dev-master",
+                "dist": {
+                    "url": "https://github.com/swagger-api/swagger-spec/archive/master.zip",
+                    "type": "zip"
+                }
+            }
         }
     ],
     "require": {
         "thefrozenfire/swagger": "dev-master@dev",
-        "zendframework/zend-code": "~2.3"
+        "zendframework/zend-code": "~2.3",
+        "zendframework/zend-uri": "~2.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.4",
+        "mnsami/composer-custom-directory-installer": "~1.0",
+        "swagger/swagger-spec": "dev-master"
+    },
+    "extra": {
+        "installer-paths": {
+            "./tests/spec": ["swagger/swagger-spec"]
+        }
     }
 }

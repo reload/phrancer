@@ -14,6 +14,7 @@ use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\FileGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
+use Zend\Uri\UriFactory;
 
 class Generator {
 
@@ -22,18 +23,26 @@ class Generator {
     }
 
     public function generate($options) {
-        $resource = new ResourceListing(file_get_contents($options['inputFile']));
+        $inputUri = UriFactory::factory($options['inputFile']);
+        $resource = new ResourceListing(file_get_contents($inputUri->toString()));
 
         $apis = $resource->getApis();
         foreach ($apis as $api) {
             /** @var ResourceListingApi $a */
             $serviceGenerator = new ClassGenerator();
-            $name = str_replace(' ', '', $api->getDescription()) . 'Api';
+            $name = preg_replace('/(\W*)/', '', $api->getDescription()) . 'Api';
             $serviceGenerator->setName($name);
             $serviceGenerator->setExtendedClass('SwaggerApi');
 
+            $uri = UriFactory::factory($api->getPath());
+            $uri->makeRelative($resource->getBasePath());
+            if ($uri->getPath()[0] == '/') {
+                $uri->setPath('.' . $uri->getPath());
+            }
+            $uri->resolve($inputUri->toString());
+
             $api = new ApiDeclaration(
-                file_get_contents('.' . $resource->getBasePath() . $api->getPath())
+                file_get_contents($uri->toString())
             );
             foreach ($api->getApis() as $a) {
                 /** @var ApiDeclarationApi $a */
@@ -106,6 +115,7 @@ class Generator {
             }
 
             $fileGenerator = new FileGenerator();
+            $fileGenerator->setNamespace($options['namespace']);
 
             if ($a->getDescription()) {
                 $docBlockGenerator = new DocBlockGenerator();
@@ -117,6 +127,19 @@ class Generator {
             $fileGenerator->setClass($serviceGenerator);
             $fileGenerator->write();
         }
+
+        $files = array(
+            'HttpClient.php',
+            'SwaggerApi.php',
+        );
+        foreach ($files as $file) {
+            $fileGenerator = FileGenerator::fromReflectedFileName(__DIR__ . DIRECTORY_SEPARATOR . $file);
+            $fileGenerator->setNamespace($options['namespace']);
+            $fileGenerator->setSourceDirty(true);
+            $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $file);
+            $fileGenerator->write();
+        }
+
     }
 
 }

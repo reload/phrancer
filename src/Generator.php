@@ -83,6 +83,7 @@ class Generator {
         foreach ($operation->getParameters() as $parameter) {
             /** @var Parameter $parameter */
             $paramGenerator = new ParameterGenerator($parameter->getName());
+            $paramGenerator->setType($parameter->getType());
 
             if (!$parameter->getRequired()) {
                 $paramGenerator->setDefaultValue(null);
@@ -90,7 +91,7 @@ class Generator {
 
             $tag = new ParamTag(
                 $parameter->getName(),
-                $parameter->getParamType(),
+                $parameter->getType(),
                 $parameter->getDescription()
             );
             $docBlockGenerator->setTag($tag);

@@ -3,6 +3,6 @@
 
 interface HttpClient {
 
-    public function request($method, $url, $body);
+    public function request($method, $url, $headers, $body);
 
 }

@@ -14,6 +14,7 @@ use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\FileGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
+use Zend\Uri\Uri;
 use Zend\Uri\UriFactory;
 
 class Generator {
@@ -23,6 +24,8 @@ class Generator {
     }
 
     public function generate($options) {
+        $files = array();
+
         $inputUri = UriFactory::factory($options['inputFile']);
         $resource = new ResourceListing(file_get_contents($inputUri->toString()));
 
@@ -35,20 +38,27 @@ class Generator {
             $fileGenerator->setNamespace($options['namespace']);
             $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $service->getName() . '.php');
             $fileGenerator->setClass($service);
-            $fileGenerator->write();
+
+            $files[] = $fileGenerator;
         }
 
-        $this->generateSkeleton($options);
+        $files = array_merge($files, $this->generateSkeleton($options));
 
+        array_walk($files, function(FileGenerator $file) {
+            $file->write();
+        });
     }
 
     /**
      * Generate skeleton files needed to use the generated client.
      *
      * @param array $options
+     * @return FileGenerator[]
      */
     protected function generateSkeleton(array $options)
     {
+        $generators = array();
+
         $files = array(
             'HttpClient.php',
             'SwaggerApi.php',
@@ -56,14 +66,61 @@ class Generator {
         foreach ($files as $file) {
             $fileGenerator = FileGenerator::fromReflectedFileName(__DIR__ . DIRECTORY_SEPARATOR . $file);
             $fileGenerator->setNamespace($options['namespace']);
+            // Mark the source as dirty to recreate it using Reflection while changing the namespace.
             $fileGenerator->setSourceDirty(true);
             $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $file);
-            $fileGenerator->write();
+
+            $generators[] = $fileGenerator;
         }
+
+        return $generators;
     }
 
     /**
-     * Generate
+     * Generate a class for a service.
+     *
+     * @param ResourceListingApi $api
+     * @param ResourceListing $resource
+     * @param Uri $inputUri
+     * @return ClassGenerator
+     */
+    protected function generateService(ResourceListingApi $api, ResourceListing $resource, Uri $inputUri)
+    {
+        $serviceGenerator = new ClassGenerator();
+        $name = preg_replace('/(\W*)/', '', $api->getDescription()) . 'Api';
+        $serviceGenerator->setName($name);
+        $serviceGenerator->setExtendedClass('SwaggerApi');
+
+        $uri = UriFactory::factory($api->getPath());
+        $uri->makeRelative($resource->getBasePath());
+        if ($uri->getPath()[0] == '/') {
+            $uri->setPath('.' . $uri->getPath());
+        }
+        $uri->resolve($inputUri->toString());
+
+        $api = new ApiDeclaration(
+            file_get_contents($uri->toString())
+        );
+        foreach ($api->getApis() as $a) {
+            /** @var ApiDeclarationApi $a */
+            foreach ($a->getOperations() as $operation) {
+                $methodGenerator = $this->generateMethod($operation, $api);
+
+                $serviceGenerator->addMethodFromGenerator($methodGenerator);
+            }
+        }
+
+        if ($api->getDescription()) {
+            $docBlockGenerator = new DocBlockGenerator();
+            $docBlockGenerator->setLongDescription($api->getDescription());
+            $fileGenerator->setDocBlock($docBlockGenerator);
+        }
+
+        return $serviceGenerator;
+    }
+
+    /**
+     * Generate method for an operation.
      *
      * @param Operation $operation
      * @param ApiDeclaration $api
@@ -133,47 +190,6 @@ class Generator {
         $methodGenerator->setBody($body);
 
         return $methodGenerator;
-    }
-
-    /**
-     * @param $api
-     * @param $resource
-     * @param $inputUri
-     * @return ClassGenerator
-     */
-    protected function generateService($api, $resource, $inputUri)
-    {
-        $serviceGenerator = new ClassGenerator();
-        $name = preg_replace('/(\W*)/', '', $api->getDescription()) . 'Api';
-        $serviceGenerator->setName($name);
-        $serviceGenerator->setExtendedClass('SwaggerApi');
-
-        $uri = UriFactory::factory($api->getPath());
-        $uri->makeRelative($resource->getBasePath());
-        if ($uri->getPath()[0] == '/') {
-            $uri->setPath('.' . $uri->getPath());
-        }
-        $uri->resolve($inputUri->toString());
-
-        $api = new ApiDeclaration(
-            file_get_contents($uri->toString())
-        );
-        foreach ($api->getApis() as $a) {
-            /** @var ApiDeclarationApi $a */
-            foreach ($a->getOperations() as $operation) {
-                $methodGenerator = $this->generateMethod($operation, $api);
-
-                $serviceGenerator->addMethodFromGenerator($methodGenerator);
-            }
-        }
-
-        if ($api->getDescription()) {
-            $docBlockGenerator = new DocBlockGenerator();
-            $docBlockGenerator->setLongDescription($api->getDescription());
-            $fileGenerator->setDocBlock($docBlockGenerator);
-        }
-
-        return $serviceGenerator;
     }
 
 }

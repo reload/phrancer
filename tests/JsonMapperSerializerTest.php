@@ -4,7 +4,8 @@ namespace reload\phrancer;
 
 use reload\phrancer\Serializer\JsonMapperSerializer;
 
-class JsonMapperSerializerTest extends \PHPUnit_Framework_TestCase {
+class JsonMapperSerializerTest extends \PHPUnit_Framework_TestCase
+{
 
     protected $jsonMapper;
 
@@ -61,6 +62,4 @@ class JsonMapperSerializerTest extends \PHPUnit_Framework_TestCase {
         $newArray = $this->serializer->unserialize(json_encode($array), 'ArrayObject', 'stdClass');
         $this->assertEquals($array, $newArray);
     }
-
-
 }

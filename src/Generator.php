@@ -20,14 +20,16 @@ use Zend\Code\Generator\ParameterGenerator;
 use Zend\Code\Generator\PropertyGenerator;
 use Zend\Uri\UriFactory;
 
-class Generator {
+class Generator
+{
 
     public function __construct()
     {
 
     }
 
-    public function generate($options) {
+    public function generate($options)
+    {
         $files = array();
 
         $inputUri = UriFactory::factory($options['inputFile']);
@@ -88,6 +90,7 @@ class Generator {
         $serviceGenerator = new ClassGenerator();
         $serviceGenerator->setName($name);
         $serviceGenerator->setExtendedClass('SwaggerApi');
+        $serviceGenerator->addUse('reload\\phrancer\\SwaggerApi');
         foreach ($api->getApis() as $a) {
             /** @var ApiDeclarationApi $a */
             foreach ($a->getOperations() as $operation) {

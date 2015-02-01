@@ -1,8 +1,9 @@
 <?php
 
+namespace reload\phrancer;
 
-interface HttpClient {
+interface HttpClient
+{
 
     public function request($method, $url, $headers, $body);
-
 }

@@ -1,9 +1,11 @@
 <?php
 
+namespace reload\phrancer;
 
 use reload\phrancer\Serializer;
 
-class SwaggerApi {
+class SwaggerApi
+{
 
     /**
      * @var HttpClient
@@ -15,7 +17,8 @@ class SwaggerApi {
      */
     protected $serializer;
 
-    public function __construct(HttpClient $client, Serializer $serializer) {
+    public function __construct(HttpClient $client, Serializer $serializer)
+    {
         $this->client = $client;
         $this->serializer = $serializer;
     }
@@ -28,7 +31,8 @@ class SwaggerApi {
      * @param array|null $body
      * @return mixed
      */
-    public function request($method, $url, $path = array(), $query = array(), $body = null) {
+    public function request($method, $url, $path = array(), $query = array(), $body = null)
+    {
         // Replace placeholders in url.
         foreach ($path as $name => $value) {
             $path['{' . $name . '}' ] = $value;
@@ -42,5 +46,4 @@ class SwaggerApi {
 
         return $this->client->request($method, $url, $headers, $body);
     }
-
 }

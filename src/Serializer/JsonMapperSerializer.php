@@ -7,7 +7,8 @@ use ArrayObject;
 use JsonMapper;
 use reload\phrancer\Serializer;
 
-class JsonMapperSerializer implements Serializer {
+class JsonMapperSerializer implements Serializer
+{
 
     /**
      * @var JsonMapper
@@ -37,5 +38,4 @@ class JsonMapperSerializer implements Serializer {
             return $this->jsonMapper->mapArray($object, new ArrayObject(), $arrayType);
         }
     }
-
 }

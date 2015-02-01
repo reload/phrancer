@@ -4,22 +4,26 @@ namespace reload\phrancer;
 
 use Swagger\ApiDeclaration;
 use Swagger\ApiDeclaration\Api as ApiDeclarationApi;
+use Swagger\ApiDeclaration\Model;
+use Swagger\ApiDeclaration\Model\Property;
 use Swagger\ResourceListing;
 use Swagger\ResourceListing\Api as ResourceListingApi;
 use Swagger\ApiDeclaration\Api\Operation;
 use Swagger\ApiDeclaration\Api\Operation\Parameter;
 use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
+use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
 use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\FileGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
-use Zend\Uri\Uri;
+use Zend\Code\Generator\PropertyGenerator;
 use Zend\Uri\UriFactory;
 
 class Generator {
 
-    public function __construct() {
+    public function __construct()
+    {
 
     }
 
@@ -29,78 +33,61 @@ class Generator {
         $inputUri = UriFactory::factory($options['inputFile']);
         $resource = new ResourceListing(file_get_contents($inputUri->toString()));
 
-        $apis = $resource->getApis();
-        foreach ($apis as $api) {
-            /** @var ResourceListingApi $api */
-            $service = $this->generateService($api, $resource, $inputUri);
+        foreach ($resource->getApis() as $resourceListing) {
+            /** @var ResourceListingApi $resourceListing */
+            $uri = UriFactory::factory($resourceListing->getPath());
+            $uri->makeRelative($resource->getBasePath());
+            if ($uri->getPath()[0] == '/') {
+                $uri->setPath('.' . $uri->getPath());
+            }
+            $uri->resolve($inputUri->toString());
 
-            $fileGenerator = new FileGenerator();
-            $fileGenerator->setNamespace($options['namespace']);
-            $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $service->getName() . '.php');
-            $fileGenerator->setClass($service);
+            $api = new ApiDeclaration(
+                file_get_contents($uri->toString())
+            );
 
-            $files[] = $fileGenerator;
+            $classes = array();
+            $classes[] = $this->generateService($resourceListing, $api);
+
+            $models = $api->getModels();
+            if (!empty($models)) {
+                foreach ($api->getModels() as $model) {
+                    $classes[] = $this->generateModel($model);
+                }
+            }
+
+            foreach ($classes as $class) {
+                $fileGenerator = new FileGenerator();
+                $fileGenerator->setNamespace($options['namespace']);
+                $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $class->getName() . '.php');
+                $fileGenerator->setClass($class);
+                $files[] = $fileGenerator;
+            }
+
         }
 
-        $files = array_merge($files, $this->generateSkeleton($options));
-
+        if (!is_dir($options['outputDir'])) {
+            mkdir($options['outputDir']);
+        }
         array_walk($files, function(FileGenerator $file) {
             $file->write();
         });
     }
 
     /**
-     * Generate skeleton files needed to use the generated client.
-     *
-     * @param array $options
-     * @return FileGenerator[]
-     */
-    protected function generateSkeleton(array $options)
-    {
-        $generators = array();
-
-        $files = array(
-            'HttpClient.php',
-            'SwaggerApi.php',
-        );
-        foreach ($files as $file) {
-            $fileGenerator = FileGenerator::fromReflectedFileName(__DIR__ . DIRECTORY_SEPARATOR . $file);
-            $fileGenerator->setNamespace($options['namespace']);
-            // Mark the source as dirty to recreate it using Reflection while changing the namespace.
-            $fileGenerator->setSourceDirty(true);
-            $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $file);
-
-            $generators[] = $fileGenerator;
-        }
-
-        return $generators;
-    }
-
-    /**
      * Generate a class for a service.
      *
-     * @param ResourceListingApi $api
      * @param ResourceListing $resource
-     * @param Uri $inputUri
+     * @param ApiDeclaration $api
      * @return ClassGenerator
      */
-    protected function generateService(ResourceListingApi $api, ResourceListing $resource, Uri $inputUri)
+    protected function generateService(ResourceListingApi $resource, ApiDeclaration $api)
     {
+        $name = preg_replace('/(\W*)/', '', $resource->getDescription()) . 'Api';
+
         $serviceGenerator = new ClassGenerator();
-        $name = preg_replace('/(\W*)/', '', $api->getDescription()) . 'Api';
         $serviceGenerator->setName($name);
         $serviceGenerator->setExtendedClass('SwaggerApi');
-
-        $uri = UriFactory::factory($api->getPath());
-        $uri->makeRelative($resource->getBasePath());
-        if ($uri->getPath()[0] == '/') {
-            $uri->setPath('.' . $uri->getPath());
-        }
-        $uri->resolve($inputUri->toString());
-
-        $api = new ApiDeclaration(
-            file_get_contents($uri->toString())
-        );
         foreach ($api->getApis() as $a) {
             /** @var ApiDeclarationApi $a */
             foreach ($a->getOperations() as $operation) {
@@ -161,6 +148,8 @@ class Generator {
         $methodGenerator->setDocBlock($docBlockGenerator);
 
         // Generate the method body
+        $body = array();
+
         $parameterTypeNames = array(
             'path' => array(),
             'query' => array(),
@@ -172,6 +161,12 @@ class Generator {
             $parameterTypeNames[$parameter->getParamType()][] = $parameter->getName();
         }
 
+        // Serialize body parameters.
+        foreach ($parameterTypeNames['body'] as $parameter) {
+            $body[] = '$' . $parameter . ' = $this->serializer->serialize($' . $parameter . ');';
+        }
+
+        // Assemble parameters for making the request.
         foreach ($parameterTypeNames as $type => &$names) {
             $names = array_map(
                 function ($name) {
@@ -189,12 +184,47 @@ class Generator {
             $parameterTypeNames['query'],
             $parameterTypeNames['body'],
         );
-        $body = '$this->request(' . implode($requestParams, ', ') . ');';
-        $methodGenerator->setBody($body);
+        $body[] = '$response = $this->request(' . implode($requestParams, ', ') . ');';
+        $arrayType = (!empty($operation->getItems())) ? '"' . $operation->getItems() . '"' : 'null';
+        $body[] = 'return $this->serializer->unserialize($response, "' . $operation->getType() . '", ' . $arrayType . ');';
+        $methodGenerator->setBody(implode(PHP_EOL, $body));
 
         return $methodGenerator;
     }
 
+
+    /**
+     * Generate a model class used by a service.
+     *
+     * @param Model $model
+     * @return ClassGenerator
+     */
+    protected function generateModel(Model $model)
+    {
+        $classGenerator = new ClassGenerator();
+        $classGenerator->setName($model->getName());
+
+        $docBlockGenerator = new DocBlockGenerator();
+        $docBlockGenerator->setShortDescription($model->getDescription());
+
+        foreach ($model->getProperties() as $property) {
+            /** @var Property $property */
+            $propertyGenerator = new PropertyGenerator();
+            $propertyGenerator->setName($property->getName());
+
+            $propertyTag = new PropertyTag();
+            $propertyTag->setPropertyName($property->getName());
+            $propertyTag->setTypes($property->getType());
+            $propertyTag->setDescription($property->getDescription());
+            $docBlockGenerator = new DocBlockGenerator();
+            $docBlockGenerator->setTag($propertyTag);
+            $propertyGenerator->setDocBlock($docBlockGenerator);
+
+            $classGenerator->addPropertyFromGenerator($propertyGenerator);
+        }
+
+        return $classGenerator;
+    }
 
     /**
      * Determine if a type is a primitive

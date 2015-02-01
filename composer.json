@@ -36,9 +36,10 @@
         }
     ],
     "require": {
-        "thefrozenfire/swagger": "dev-master@dev",
+        "thefrozenfire/swagger": "dev-add-operation-items as dev-master@dev",
         "zendframework/zend-code": "~2.3",
-        "zendframework/zend-uri": "~2.3"
+        "zendframework/zend-uri": "~2.3",
+        "netresearch/jsonmapper": "0.4.*"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.4",

@@ -140,7 +140,10 @@ class Generator {
         foreach ($operation->getParameters() as $parameter) {
             /** @var Parameter $parameter */
             $paramGenerator = new ParameterGenerator($parameter->getName());
-            $paramGenerator->setType($parameter->getType());
+
+            if (!$this->isPrimivite($parameter->getType())) {
+                $paramGenerator->setType($parameter->getType());
+            }
 
             if (!$parameter->getRequired()) {
                 $paramGenerator->setDefaultValue(null);
@@ -192,4 +195,26 @@ class Generator {
         return $methodGenerator;
     }
 
+
+    /**
+     * Determine if a type is a primitive
+     *
+     * @param string $type The type name
+     * @return bool true if the type is a primitive
+     */
+    protected function isPrimivite($type)
+    {
+        $primitives = array(
+            'integer',
+            'long',
+            'float',
+            'double',
+            'string',
+            'byte',
+            'boolean',
+            'date',
+            'dateTime'
+        );
+        return in_array($type, $primitives);
+    }
 }

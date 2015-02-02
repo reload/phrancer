@@ -1,8 +1,6 @@
 <?php
 
-
-namespace reload\phrancer;
-
+namespace Reload\Prancer;
 
 class GeneratorTest extends \PHPUnit_Framework_TestCase
 {

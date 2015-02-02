@@ -1,15 +1,13 @@
 <?php
 
-namespace reload\phrancer\Serializer;
-
+namespace Reload\Prancer\Serializer;
 
 use ArrayObject;
 use JsonMapper;
-use reload\phrancer\Serializer;
+use Reload\Prancer\Serializer;
 
 class JsonMapperSerializer implements Serializer
 {
-
     /**
      * @var JsonMapper
      */

@@ -1,5 +1,5 @@
 {
-    "name": "reload/phrancer",
+    "name": "Reload/Prancer",
     "license": "MIT",
     "authors": [
         {
@@ -9,12 +9,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "reload\\phrancer\\": "src/"
+            "Reload\\Prancer\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "reload\\phrancer\\": "tests/"
+            "Reload\\Prancer\\": "tests/"
         }
     },
     "repositories":

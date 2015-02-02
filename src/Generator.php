@@ -1,6 +1,6 @@
 <?php
 
-namespace reload\phrancer;
+namespace Reload\Prancer;
 
 use Swagger\ApiDeclaration;
 use Swagger\ApiDeclaration\Api as ApiDeclarationApi;
@@ -22,7 +22,6 @@ use Zend\Uri\UriFactory;
 
 class Generator
 {
-
     public function __construct()
     {
 
@@ -90,7 +89,7 @@ class Generator
         $serviceGenerator = new ClassGenerator();
         $serviceGenerator->setName($name);
         $serviceGenerator->setExtendedClass('SwaggerApi');
-        $serviceGenerator->addUse('reload\\phrancer\\SwaggerApi');
+        $serviceGenerator->addUse('Reload\\Prancer\\SwaggerApi');
         foreach ($api->getApis() as $a) {
             /** @var ApiDeclarationApi $a */
             foreach ($a->getOperations() as $operation) {

@@ -1,8 +1,8 @@
 <?php
 
-namespace reload\phrancer;
+namespace Reload\Prancer;
 
-use reload\phrancer\Serializer;
+use Reload\Prancer\Serializer;
 
 class SwaggerApi
 {

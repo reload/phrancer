@@ -1,8 +1,6 @@
 <?php
 
-
-namespace reload\phrancer;
-
+namespace Reload\Prancer;
 
 interface Serializer
 {

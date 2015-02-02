@@ -1,8 +1,8 @@
 <?php
 
-namespace reload\phrancer;
+namespace Reload\Prancer;
 
-use reload\phrancer\Serializer\JsonMapperSerializer;
+use Reload\Prancer\Serializer\JsonMapperSerializer;
 
 class JsonMapperSerializerTest extends \PHPUnit_Framework_TestCase
 {

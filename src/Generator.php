@@ -22,21 +22,47 @@ use Zend\Uri\UriFactory;
 
 class Generator
 {
-    public function __construct()
-    {
+    protected $inputFile;
+    protected $outputDir;
+    protected $namespace;
+    protected $clientNamespace;
+    protected $modelNamespace;
 
+    public function __construct($options)
+    {
+        $this->inputFile = !empty($options['inputFile']) ?
+                         $options['inputFile'] : '';
+        $this->outputDir = !empty($options['outputDir']) ?
+                         $options['outputDir'] : '';
+        $this->namespace = !empty($options['namespace']) ?
+                         $options['namespace'] : '';
+        $this->clientNamespace = !empty($options['clientNamespace']) ?
+                               $options['clientNamespace'] :
+                               $this->namespace;
+        $this->modelNamespace = !empty($options['modelNamespace']) ?
+                               $options['modelNamespace'] :
+                               $this->namespace;
+        if (empty($this->inputFile) ||
+            empty($this->outputDir) ||
+            empty($this->namespace) ||
+            empty($this->clientNamespace) ||
+            empty($this->modelNamespace)) {
+            throw new RuntimeException('Bad arguments for generator.');
+        }
     }
 
-    public function generate($options)
+    public function generate()
     {
         $files = array();
 
-        $inputUri = UriFactory::factory($options['inputFile']);
+        $inputUri = UriFactory::factory($this->inputFile);
         $resource = new ResourceListing(file_get_contents($inputUri->toString()));
 
         foreach ($resource->getApis() as $resourceListing) {
             /** @var ResourceListingApi $resourceListing */
-            $uri = UriFactory::factory(str_replace('{format}', 'json', $resourceListing->getPath()));
+            // Fix up the oddity of having the {format} placeholder in the filename.
+            $resourcePath = str_replace('{format}', 'json', $resourceListing->getPath());
+            $uri = UriFactory::factory($resourcePath);
             $uri->makeRelative($resource->getBasePath());
             if ($uri->getPath()[0] == '/') {
                 $uri->setPath('.' . $uri->getPath());
@@ -48,29 +74,37 @@ class Generator
             );
 
             $classes = array();
-            $classes[] = $this->generateService($resourceListing, $api);
+            $generator = $this->generateService($resourceListing, $api);
+            $generator->setNamespaceName($this->clientNamespace);
+            if ($this->clientNamespace != $this->modelNamespace) {
+                $generator->addUse($this->modelNamespace);
+            }
+            $classes[] = $generator;
 
             $models = $api->getModels();
             if (!empty($models)) {
                 foreach ($api->getModels() as $model) {
-                    $classes[] = $this->generateModel($model);
+                    $generator = $this->generateModel($model);
+                    $generator->setNamespaceName($this->modelNamespace);
+                    $classes[] = $generator;
                 }
             }
 
             foreach ($classes as $class) {
                 $fileGenerator = new FileGenerator();
-                $fileGenerator->setNamespace($options['namespace']);
-                $fileGenerator->setFilename($options['outputDir'] . DIRECTORY_SEPARATOR . $class->getName() . '.php');
+                $fileGenerator->setFilename($this->outputDir . DIRECTORY_SEPARATOR . $this->getFilenameFromClass($class));
                 $fileGenerator->setClass($class);
                 $files[] = $fileGenerator;
             }
 
         }
 
-        if (!is_dir($options['outputDir'])) {
-            mkdir($options['outputDir']);
-        }
         array_walk($files, function(FileGenerator $file) {
+            $dir = dirname($file->getFilename());
+            if (!is_dir($dir)) {
+                // Create parent directories.
+                mkdir($dir, 0777, TRUE);
+            }
             $file->write();
         });
     }
@@ -179,6 +213,7 @@ class Generator
             $names = 'array(' . implode($names, ', ') . ')';
         }
 
+        // Parameters for the request call.
         $requestParams = array(
             '"' . $operation->getMethod() . '"',
             '"' . $api->getResourcePath() . '"',
@@ -186,7 +221,10 @@ class Generator
             $parameterTypeNames['query'],
             $parameterTypeNames['body'],
         );
+        // Create the request call.
         $body[] = '$response = $this->request(' . implode($requestParams, ', ') . ');';
+
+        // Handle the $response;
         $arrayType = (!empty($operation->getItems())) ? '"' . $operation->getItems() . '"' : 'null';
         $body[] = 'return $this->serializer->unserialize($response, "' . $operation->getType() . '", ' . $arrayType . ');';
         $methodGenerator->setBody(implode(PHP_EOL, $body));
@@ -226,6 +264,26 @@ class Generator
         }
 
         return $classGenerator;
+    }
+
+    /**
+     * Return the filename for a class.
+     *
+     * Strips out the base namespace, and adds directories for the remainder, suitable for PSR4.
+     *
+     * @param ClassGenerator $class
+     * @return string
+     */
+    protected function getFilenameFromClass(ClassGenerator $class) {
+        $namespace = $class->getNamespaceName();
+        // Strip the base namespace.
+        if (substr($namespace, 0, strlen($this->namespace)) == $this->namespace) {
+            $namespace = substr($namespace, strlen($this->namespace));
+        }
+
+        $path_parts = explode('\\', $namespace);
+        $path_parts[] = $class->getName() . '.php';
+        return implode(DIRECTORY_SEPARATOR, $path_parts);
     }
 
     /**

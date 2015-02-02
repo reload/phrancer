@@ -2,9 +2,10 @@
 
 require_once 'vendor/autoload.php';
 
-$generator = new Reload\Prancer\Generator();
-$generator->generate(array(
+$generator = new Reload\Prancer\Generator(array(
     'inputFile' => 'externalapidocs/service.json',
     'outputDir' => './tmp',
-    'namespace' => 'fbs',
+    'namespace' => 'FBS',
+    'modelNamespace' => 'FBS\\Model',
 ));
+$generator->generate();

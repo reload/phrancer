@@ -37,7 +37,7 @@ class Generator
 
         foreach ($resource->getApis() as $resourceListing) {
             /** @var ResourceListingApi $resourceListing */
-            $uri = UriFactory::factory($resourceListing->getPath());
+            $uri = UriFactory::factory(str_replace('{format}', 'json', $resourceListing->getPath()));
             $uri->makeRelative($resource->getBasePath());
             if ($uri->getPath()[0] == '/') {
                 $uri->setPath('.' . $uri->getPath());

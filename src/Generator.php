@@ -92,21 +92,29 @@ class Generator
 
             foreach ($classes as $class) {
                 $fileGenerator = new FileGenerator();
-                $fileGenerator->setFilename($this->outputDir . DIRECTORY_SEPARATOR . $this->getFilenameFromClass($class));
+                $fileGenerator->setFilename($this->outputDir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . $this->getFilenameFromClass($class));
                 $fileGenerator->setClass($class);
                 $files[] = $fileGenerator;
             }
 
         }
 
+        // Create generated classes.
         array_walk($files, function(FileGenerator $file) {
             $dir = dirname($file->getFilename());
             if (!is_dir($dir)) {
                 // Create parent directories.
-                mkdir($dir, 0777, TRUE);
+                mkdir($dir, 0777, true);
             }
             $file->write();
         });
+
+        // Copy Prancer base classes over.
+        $this->copyClasses();
+
+        // Generate a composer.json to create autoloader and pull in
+        // dependencies.
+        $this->generateComposorJson();
     }
 
     /**
@@ -284,6 +292,51 @@ class Generator
         $path_parts = explode('\\', $namespace);
         $path_parts[] = $class->getName() . '.php';
         return implode(DIRECTORY_SEPARATOR, $path_parts);
+    }
+
+    /**
+     * Copy Prancer classes into the generated code.
+     *
+     * We'd rather just add a require to the composer.json, but due to
+     * our own requirements, this gets messy.
+     */
+    protected function copyClasses() {
+        $files = array(
+            'HttpClient.php',
+            'Serializer/JsonMapperSerializer.php',
+            'Serializer.php',
+            'SwaggerApi.php',
+        );
+
+        foreach ($files as $file) {
+            $source = implode(DIRECTORY_SEPARATOR, array(dirname(__DIR__), 'src'));
+            $destination = implode(DIRECTORY_SEPARATOR, array($this->outputDir, 'prancer', $file));
+            $dir = dirname($destination);
+
+            if (!is_dir($dir)) {
+                mkdir($dir, 0777, true);
+            }
+            file_put_contents($destination, file_get_contents($source));
+        }
+    }
+
+    /**
+     * Generate a composer.json for the generated code.
+     */
+    protected function generateComposorJson() {
+        $data = array(
+            'autoload' => array(
+                'psr-4' => array(
+                    $this->namespace . '\\' => 'src/',
+                    'Reload\\Prancer\\' => 'prancer/',
+                )
+            ),
+            'require' => array(
+                "netresearch/jsonmapper" => "0.4.*",
+            ),
+        );
+
+        file_put_contents($this->outputDir . DIRECTORY_SEPARATOR . 'composer.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
     /**

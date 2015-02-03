@@ -2,6 +2,8 @@
 
 namespace Reload\Prancer;
 
+require_once 'vendor/autoload.php';
+
 use Reload\Prancer\Serializer\JsonMapperSerializer;
 
 class JsonMapperSerializerTest extends \PHPUnit_Framework_TestCase
@@ -59,7 +61,7 @@ class JsonMapperSerializerTest extends \PHPUnit_Framework_TestCase
 
         $this->jsonMapper->method('mapArray')->willReturn($array);
 
-        $newArray = $this->serializer->unserialize(json_encode($array), 'ArrayObject', 'stdClass');
+        $newArray = $this->serializer->unserialize(json_encode($array), array('stdClass'));
         $this->assertEquals($array, $newArray);
     }
 }

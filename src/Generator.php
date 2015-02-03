@@ -244,11 +244,13 @@ class Generator
         $responseMapping = array(
             '200' => array('message' => 'null', 'model' => $model),
         );
-        foreach ($operation->getResponseMessages() as $responseMessage) {
-            $responseMapping[$responseMessage->getCode()] = array(
-                'message' => var_export($responseMessage->getMessage(), true),
-                'model' => var_export($responseMessage->getResponseModel(), true),
-            );
+        if ($repsonseMessages = $operation->getResponseMessages()) {
+            foreach ($operation->getResponseMessages() as $responseMessage) {
+                $responseMapping[$responseMessage->getCode()] = array(
+                    'message' => var_export($responseMessage->getMessage(), true),
+                    'model' => var_export($responseMessage->getResponseModel(), true),
+                );
+            }
         }
 
         $body[] = '$responseMapping = array(';

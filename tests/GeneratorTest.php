@@ -2,20 +2,24 @@
 
 namespace Reload\Prancer;
 
+require_once 'vendor/autoload.php';
+
+use Reload\Prancer\Generator;
+
 class GeneratorTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testGenerator()
     {
-        $generator = new Generator();
-        $generator->generate(array(
+        $generator = new Generator(array(
             'inputFile' => __DIR__ . '/spec/fixtures/v1.2/helloworld/static/api-docs',
             'outputDir' => './tmp/',
             'namespace' => 'swagger\helloworld',
         ));
+        $generator->generate();
 
         $files = array(
-            'swagger\helloworld\GeneratinggreetingsinourapplicationApi' => __DIR__. '/../tmp/GeneratinggreetingsinourapplicationApi.php',
+            'swagger\helloworld\GeneratinggreetingsinourapplicationApi' => __DIR__. '/../tmp/src/GeneratinggreetingsinourapplicationApi.php',
         );
         foreach ($files as $class => $file) {
             $this->assertFileExists($file);

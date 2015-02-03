@@ -218,23 +218,60 @@ class Generator
                 },
                 $names
             );
-            $names = 'array(' . implode($names, ', ') . ')';
+            // If body is only one item, don't make it an array. The
+            // REST service wouldn't expect it to be.
+            if ($type == 'body' && count($names) == 1) {
+                $names = implode('', $names);
+            } else {
+                $names = 'array(' . implode(', ', $names) . ')';
+            }
         }
 
+        // Map each response code to models.
+        switch ($operation->getType()) {
+        case 'array':
+            $model = 'array(' . var_export($operation->getItems(), true) . ')';
+            break;
+
+        case 'void':
+            $model = 'null';
+            break;
+
+        default:
+            $model = var_export($operation->getType(), true);
+        }
+
+        $responseMapping = array(
+            '200' => array('message' => 'null', 'model' => $model),
+        );
+        foreach ($operation->getResponseMessages() as $responseMessage) {
+            $responseMapping[$responseMessage->getCode()] = array(
+                'message' => var_export($responseMessage->getMessage(), true),
+                'model' => var_export($responseMessage->getResponseModel(), true),
+            );
+        }
+
+        $body[] = '$responseMapping = array(';
+        foreach ($responseMapping as $code => $mapping) {
+            $body[] = '  ' . $code . ' => array("message" => ' . $mapping['message'] . ', "model" => ' . $mapping['model'] . '),';
+        }
+        $body[] = ');';
+        
         // Parameters for the request call.
         $requestParams = array(
             '"' . $operation->getMethod() . '"',
             '"' . $api->getResourcePath() . '"',
+            '$responseMapping',
             $parameterTypeNames['path'],
             $parameterTypeNames['query'],
             $parameterTypeNames['body'],
         );
         // Create the request call.
-        $body[] = '$response = $this->request(' . implode($requestParams, ', ') . ');';
+        $body[] = 'return $this->request(' . implode($requestParams, ', ') . ');';
 
         // Handle the $response;
-        $arrayType = (!empty($operation->getItems())) ? '"' . $operation->getItems() . '"' : 'null';
-        $body[] = 'return $this->serializer->unserialize($response, "' . $operation->getType() . '", ' . $arrayType . ');';
+        // $arrayType = (!empty($operation->getItems())) ? '"' . $operation->getItems() . '"' : 'null';
+        // $body[] = 'return $this->serializer->unserialize($response, "' . $operation->getType() . '", ' . $arrayType . ');';
         $methodGenerator->setBody(implode(PHP_EOL, $body));
 
         return $methodGenerator;
@@ -332,7 +369,9 @@ class Generator
                 )
             ),
             'require' => array(
-                "netresearch/jsonmapper" => "0.4.*",
+                'netresearch/jsonmapper' => "0.4.*",
+                'psr/http-message' => '~0.8.0',
+                'phly/http' => '~1.0-dev@dev',
             ),
         );
 

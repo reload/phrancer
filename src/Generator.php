@@ -172,7 +172,7 @@ class Generator
             /** @var Parameter $parameter */
             $paramGenerator = new ParameterGenerator($parameter->getName());
 
-            if (!$this->isPrimivite($parameter->getType())) {
+            if (!$this->isPrimitive($parameter->getType())) {
                 $paramGenerator->setType($parameter->getType());
             }
 
@@ -345,7 +345,7 @@ class Generator
      * @param string $type The type name
      * @return bool true if the type is a primitive
      */
-    protected function isPrimivite($type)
+    protected function isPrimitive($type)
     {
         $primitives = array(
             'integer',

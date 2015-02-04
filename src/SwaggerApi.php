@@ -45,16 +45,16 @@ class SwaggerApi
 
         $url = $url . '?'. http_build_query($query);
 
-        $streamname = 'php://temp/' . uniqeid('ReloadPrancer');
+        $streamname = 'php://temp/' . uniqid('ReloadPrancer');
         $request = new Request(
             $url,
             $method,
             $streamname,
-            $headers
+            array()
         );
         file_put_contents($streamname, $body);
         
-        $response = $this->client->request($method, $url, $headers, $body);
+        $response = $this->client->request($request);
 
         $message = 'Unexpected status code from service.';
         if (isset($responseMapping[$response->getStatusCode()])) {

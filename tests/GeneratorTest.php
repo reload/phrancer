@@ -31,5 +31,17 @@ class GeneratorTest extends \PHPUnit_Framework_TestCase
         $method = $class->getMethod('helloSubject');
         $this->assertInstanceOf('ReflectionMethod', $method);
         $this->assertEquals(1, $method->getNumberOfRequiredParameters());
+
+        // Spot check that the Prancer classes got copied properly.
+        // This is a regression test.
+        $files = array(
+            __DIR__. '/../tmp/prancer/Serializer/JsonMapperSerializer.php' =>
+            'class JsonMapperSerializer implements Serializer',
+        );
+        foreach ($files as $file => $needle) {
+            $this->assertFileExists($file);
+            $contents = file_get_contents($file);
+            $this->assertContains($needle, explode("\n", $contents));
+        }
     }
 }

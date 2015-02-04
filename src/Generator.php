@@ -348,7 +348,7 @@ class Generator
         );
 
         foreach ($files as $file) {
-            $source = implode(DIRECTORY_SEPARATOR, array(dirname(__DIR__), 'src'));
+            $source = implode(DIRECTORY_SEPARATOR, array(__DIR__, $file));
             $destination = implode(DIRECTORY_SEPARATOR, array($this->outputDir, 'prancer', $file));
             $dir = dirname($destination);
 

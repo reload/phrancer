@@ -173,7 +173,8 @@ class Generator
             $paramGenerator = new ParameterGenerator($parameter->getName());
 
             if (!$this->isPrimitive($parameter->getType())) {
-                $paramGenerator->setType($parameter->getType());
+                $type = $this->relativeNamespace($this->clientNamespace, $this->modelNamespace) . $parameter->getType();
+                $paramGenerator->setType($type);
             }
 
             if (!$parameter->getRequired()) {
@@ -311,6 +312,25 @@ class Generator
         }
 
         return $classGenerator;
+    }
+
+    /**
+     * Return a namespace relative to another.
+     */
+    protected function relativeNamespace($base, $namespace) {
+        // Same namespace, return an empty string.
+        if ($base == $namespace) {
+            return '';
+        }
+
+        // Namespace lies below base, return the rest.
+        $base_prefix = $base . '\\';
+        if (substr($namespace, 0, strlen($base_prefix)) == $base_prefix) {
+            return substr($namespace, strlen($base_prefix)) . '\\';
+        }
+
+        // Else return a full namespace.
+        return '\\' . $namespace . '\\';
     }
 
     /**

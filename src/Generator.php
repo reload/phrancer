@@ -230,16 +230,16 @@ class Generator
 
         // Map each response code to models.
         switch ($operation->getType()) {
-        case 'array':
-            $model = 'array(' . var_export($operation->getItems(), true) . ')';
-            break;
+            case 'array':
+                $model = 'array(' . var_export($operation->getItems(), true) . ')';
+                break;
 
-        case 'void':
-            $model = 'null';
-            break;
+            case 'void':
+                $model = 'null';
+                break;
 
-        default:
-            $model = var_export($operation->getType(), true);
+            default:
+                $model = var_export($operation->getType(), true);
         }
 
         $responseMapping = array(
@@ -272,9 +272,6 @@ class Generator
         // Create the request call.
         $body[] = 'return $this->request(' . implode($requestParams, ', ') . ');';
 
-        // Handle the $response;
-        // $arrayType = (!empty($operation->getItems())) ? '"' . $operation->getItems() . '"' : 'null';
-        // $body[] = 'return $this->serializer->unserialize($response, "' . $operation->getType() . '", ' . $arrayType . ');';
         $methodGenerator->setBody(implode(PHP_EOL, $body));
 
         return $methodGenerator;
@@ -317,7 +314,8 @@ class Generator
     /**
      * Return a namespace relative to another.
      */
-    protected function relativeNamespace($base, $namespace) {
+    protected function relativeNamespace($base, $namespace)
+    {
         // Same namespace, return an empty string.
         if ($base == $namespace) {
             return '';
@@ -341,7 +339,8 @@ class Generator
      * @param ClassGenerator $class
      * @return string
      */
-    protected function getFilenameFromClass(ClassGenerator $class) {
+    protected function getFilenameFromClass(ClassGenerator $class)
+    {
         $namespace = $class->getNamespaceName();
         // Strip the base namespace.
         if (substr($namespace, 0, strlen($this->namespace)) == $this->namespace) {
@@ -359,7 +358,8 @@ class Generator
      * We'd rather just add a require to the composer.json, but due to
      * our own requirements, this gets messy.
      */
-    protected function copyClasses() {
+    protected function copyClasses()
+    {
         $files = array(
             'HttpClient.php',
             'Serializer/JsonMapperSerializer.php',
@@ -382,7 +382,8 @@ class Generator
     /**
      * Generate a composer.json for the generated code.
      */
-    protected function generateComposorJson() {
+    protected function generateComposorJson()
+    {
         $data = array(
             'autoload' => array(
                 'psr-4' => array(

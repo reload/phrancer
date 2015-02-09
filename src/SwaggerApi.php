@@ -9,6 +9,10 @@ use Psr\Http\Message\ResponseInterface;
 
 class SwaggerApi
 {
+    /**
+     * @var string
+     */
+    protected $endpoint;
 
     /**
      * @var HttpClient
@@ -20,14 +24,15 @@ class SwaggerApi
      */
     protected $serializer;
 
-    public function __construct(HttpClient $client, Serializer $serializer)
+    public function __construct($endpoint, HttpClient $client, Serializer $serializer)
     {
+        $this->endpoint = $endpoint;
         $this->client = $client;
         $this->serializer = $serializer;
     }
 
     protected function newRequest($method, $path)
     {
-        return new SwaggerApiRequest($this->client, $this->serializer, $method, $path);
+        return new SwaggerApiRequest($this->endpoint, $this->client, $this->serializer, $method, $path);
     }
 }

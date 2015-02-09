@@ -217,7 +217,7 @@ class Generator
                 break;
 
             default:
-                $model = var_export($operation->getType(), true);
+                $model = var_export($this->fullNamespace($this->modelNamespace) . $operation->getType(), true);
         }
 
         $body[] = '';
@@ -226,7 +226,11 @@ class Generator
         if ($repsonseMessages = $operation->getResponseMessages()) {
             foreach ($operation->getResponseMessages() as $responseMessage) {
                 $message = var_export($responseMessage->getMessage(), true);
-                $model = var_export($responseMessage->getResponseModel(), true);
+                $model = 'null';
+                if ($responseMessage->getResponseModel()) {
+                    $model = $this->fullNamespace($this->modelNamespace) . $responseMessage->getResponseModel();
+                    $model = var_export($model, true);
+                }
                 $body[] = '$request->defineResponse("' . $responseMessage->getCode(). '", ' . $message . ', ' . $model . ');';
             }
         }
@@ -295,6 +299,14 @@ class Generator
     }
 
     /**
+     * Make a namespace fully qualified.
+     */
+    protected function fullNamespace($namespace)
+    {
+        return '\\' . $namespace . '\\';
+    }
+
+    /**
      * Return the filename for a class.
      *
      * Strips out the base namespace, and adds directories for the remainder, suitable for PSR4.
@@ -328,6 +340,7 @@ class Generator
             'Serializer/JsonMapperSerializer.php',
             'Serializer.php',
             'SwaggerApi.php',
+            'SwaggerApiRequest.php',
         );
 
         foreach ($files as $file) {

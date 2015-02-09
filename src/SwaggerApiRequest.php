@@ -3,9 +3,17 @@
 namespace Reload\Prancer;
 
 use Phly\Http\Request;
+use Phly\Http\Stream;
 
 class SwaggerApiRequest
 {
+    /**
+     * Server endpoint.
+     *
+     * @var string
+     */
+    protected $endpoint;
+
     /**
      * Method of request.
      *
@@ -49,8 +57,9 @@ class SwaggerApiRequest
      */
     protected $params = array();
 
-    public function __construct(HttpClient $client, Serializer $serializer, $method, $path)
+    public function __construct($endpoint, HttpClient $client, Serializer $serializer, $method, $path)
     {
+        $this->endpoint = $endpoint;
         $this->httpClient = $client;
         $this->serializer = $serializer;
         $this->method = $method;
@@ -139,12 +148,6 @@ class SwaggerApiRequest
      */
     public function getRequest()
     {
-        // Replace placeholders in url.
-        $path_args = array();
-        foreach ($request->getParameters('path') as $name => $value) {
-            $path_args['{' . $name . '}' ] = $value;
-        }
-
         // Handle path parameters.
         foreach ($this->parameters['path'] as $name => $value) {
             // We could coerce the value into a string, but it's not
@@ -155,7 +158,7 @@ class SwaggerApiRequest
             $path_replacements['{' . $name . '}' ] = $value;
         }
 
-        $url = strtr($url, $path_replacements);
+        $url = $this->endpoint . strtr($this->path, $path_replacements);
 
         // Handle query parameters.
         $query = $this->buildQuery($this->parameters['query']);
@@ -165,15 +168,14 @@ class SwaggerApiRequest
         // There can only be one body.
         $body = $this->serializer->serialize(reset($this->parameters['body']));
 
-
-        $streamname = 'php://temp/' . uniqid('ReloadPrancer');
         $request = new Request(
             $url,
-            $method,
-            $streamname,
+            $this->method,
+            // Have to supply a Stream in order to make it writable.
+            new Stream('php://memory', 'w'),
             array()
         );
-        file_put_contents($streamname, $body);
+        $request->getBody()->write($body);
 
         return $request;
     }

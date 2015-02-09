@@ -195,37 +195,15 @@ class Generator
         // Generate the method body
         $body = array();
 
-        $parameterTypeNames = array(
-            'path' => array(),
-            'query' => array(),
-            'body' => array(),
-        );
-
-        foreach ($operation->getParameters() as $parameter) {
-            /** @var Parameter $parameter */
-            $parameterTypeNames[$parameter->getParamType()][] = $parameter->getName();
-        }
-
-        // Serialize body parameters.
-        foreach ($parameterTypeNames['body'] as $parameter) {
-            $body[] = '$' . $parameter . ' = $this->serializer->serialize($' . $parameter . ');';
-        }
+        // Create new request.
+        $body[] = '$request = $this->newRequest("' . $operation->getMethod() . '", "' . $api->getResourcePath() . '");';
 
         // Assemble parameters for making the request.
-        foreach ($parameterTypeNames as $type => &$names) {
-            $names = array_map(
-                function ($name) {
-                    return '$' . $name;
-                },
-                $names
-            );
-            // If body is only one item, don't make it an array. The
-            // REST service wouldn't expect it to be.
-            if ($type == 'body' && count($names) == 1) {
-                $names = implode('', $names);
-            } else {
-                $names = 'array(' . implode(', ', $names) . ')';
-            }
+        foreach ($operation->getParameters() as $parameter) {
+            /** @var Parameter $parameter */
+            $type = $parameter->getParamType();
+            $name = $parameter->getName();
+            $body[] = '$request->addParameter("' . $type. '", "' . $name . '", $' . $name . ');';
         }
 
         // Map each response code to models.
@@ -242,35 +220,20 @@ class Generator
                 $model = var_export($operation->getType(), true);
         }
 
-        $responseMapping = array(
-            '200' => array('message' => 'null', 'model' => $model),
-        );
+        $body[] = '';
+        $body[] = '$request->defineResponse(200, "", ' . $model . ');';
+
         if ($repsonseMessages = $operation->getResponseMessages()) {
             foreach ($operation->getResponseMessages() as $responseMessage) {
-                $responseMapping[$responseMessage->getCode()] = array(
-                    'message' => var_export($responseMessage->getMessage(), true),
-                    'model' => var_export($responseMessage->getResponseModel(), true),
-                );
+                $message = var_export($responseMessage->getMessage(), true);
+                $model = var_export($responseMessage->getResponseModel(), true);
+                $body[] = '$request->defineResponse("' . $responseMessage->getCode(). '", ' . $message . ', ' . $model . ');';
             }
         }
 
-        $body[] = '$responseMapping = array(';
-        foreach ($responseMapping as $code => $mapping) {
-            $body[] = '  ' . $code . ' => array("message" => ' . $mapping['message'] . ', "model" => ' . $mapping['model'] . '),';
-        }
-        $body[] = ');';
-        
-        // Parameters for the request call.
-        $requestParams = array(
-            '"' . $operation->getMethod() . '"',
-            '"' . $api->getResourcePath() . '"',
-            '$responseMapping',
-            $parameterTypeNames['path'],
-            $parameterTypeNames['query'],
-            $parameterTypeNames['body'],
-        );
         // Create the request call.
-        $body[] = 'return $this->request(' . implode($requestParams, ', ') . ');';
+        $body[] = '';
+        $body[] = 'return $request->execute();';
 
         $methodGenerator->setBody(implode(PHP_EOL, $body));
 
@@ -410,6 +373,7 @@ class Generator
     protected function isPrimitive($type)
     {
         $primitives = array(
+            'array',
             'integer',
             'long',
             'float',

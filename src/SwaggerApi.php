@@ -3,6 +3,7 @@
 namespace Reload\Prancer;
 
 use Reload\Prancer\Serializer;
+use Reload\Prancer\SwaggerApiRequest;
 use Phly\Http\Request;
 use Psr\Http\Message\ResponseInterface;
 
@@ -25,49 +26,8 @@ class SwaggerApi
         $this->serializer = $serializer;
     }
 
-    /**
-     * @param string $method
-     * @param string $url
-     * @param array $responseMapping
-     * @param array $path
-     * @param array $query
-     * @param array|null $body
-     * @return mixed
-     */
-    public function request($method, $url, $responseMapping, $path = array(), $query = array(), $body = null)
+    protected function newRequest($method, $path)
     {
-        // Replace placeholders in url.
-        foreach ($path as $name => $value) {
-            $path['{' . $name . '}' ] = $value;
-            unset($path[$name]);
-        }
-        $url = str_replace(array_keys($path), array_values($path), $url);
-
-        $url = $url . '?'. http_build_query($query);
-
-        $streamname = 'php://temp/' . uniqid('ReloadPrancer');
-        $request = new Request(
-            $url,
-            $method,
-            $streamname,
-            array()
-        );
-        file_put_contents($streamname, $body);
-        
-        $response = $this->client->request($request);
-
-        $message = 'Unexpected status code from service.';
-        if (isset($responseMapping[$response->getStatusCode()])) {
-            $res = $responseMapping[$response->getStatusCode()];
-            $model = null;
-            if ($res['model']) {
-                $model = $this->serializer->unserialize($response->getBody(), $res['model']);
-            }
-            if ($response->getStatusCode() == 200) {
-                return $model;
-            }
-            $message = !emtpy($res['message']) ? $res['message'] : '';
-        }
-        throw new RuntimeException($message, $response->getStatusCode());
+        return new SwaggerApiRequest($this->client, $this->serializer, $method, $path);
     }
 }

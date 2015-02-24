@@ -209,7 +209,7 @@ class Generator
         // Map each response code to models.
         switch ($operation->getType()) {
             case 'array':
-                $model = 'array(' . var_export($operation->getItems(), true) . ')';
+                $model = 'array(' . var_export($this->fullNamespace($this->modelNamespace) . $operation->getItems(), true) . ')';
                 break;
 
             case 'void':

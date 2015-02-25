@@ -13,6 +13,7 @@ use Swagger\ApiDeclaration\Api\Operation\Parameter;
 use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
 use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
+use Zend\Code\Generator\DocBlock\Tag\ReturnTag;
 use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\FileGenerator;
 use Zend\Code\Generator\MethodGenerator;
@@ -190,6 +191,15 @@ class Generator
 
             $methodGenerator->setParameter($paramGenerator);
         }
+
+        $returnTag = new ReturnTag();
+        $type = $operation->getType();
+        if ($type === 'array') {
+            $type = $operation->getItems() . '[]';
+        }
+        $returnTag->setTypes($type);
+        $docBlockGenerator->setTag($returnTag);
+
         $methodGenerator->setDocBlock($docBlockGenerator);
 
         // Generate the method body
@@ -266,7 +276,11 @@ class Generator
 
             $propertyTag = new PropertyTag();
             $propertyTag->setPropertyName($property->getName());
-            $propertyTag->setTypes($property->getType());
+            $type = $property->getType();
+            if ($type === 'array') {
+                $type = $property->getItems() . '[]';
+            }
+            $propertyTag->setTypes($type);
             $propertyTag->setDescription($property->getDescription());
             $docBlockGenerator = new DocBlockGenerator();
             $docBlockGenerator->setTag($propertyTag);

@@ -383,8 +383,8 @@ class Generator
             ),
             'require' => array(
                 'netresearch/jsonmapper' => "0.4.*",
-                'psr/http-message' => '~0.8.0',
-                'phly/http' => '~1.0-dev@dev',
+                'psr/http-message' => '~0.9.0',
+                'phly/http' => '~0.11',
             ),
         );
 

@@ -149,6 +149,7 @@ class SwaggerApiRequest
     public function getRequest()
     {
         // Handle path parameters.
+        $path_replacements = array();
         foreach ($this->parameters['path'] as $name => $value) {
             // We could coerce the value into a string, but it's not
             // clearly defined how we should do it.

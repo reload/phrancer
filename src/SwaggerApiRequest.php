@@ -126,7 +126,7 @@ class SwaggerApiRequest
         $request = $this->getRequest();
         $response = $this->httpClient->request($request);
 
-        $message = 'Unexpected status code from service.';
+        $message = 'Unexpected status code from service in ' . $request->getUri()->getPath() . '.';
         $model = null;
         if (isset($this->responseDef[$response->getStatusCode()])) {
             $res = $this->responseDef[$response->getStatusCode()];

@@ -134,9 +134,9 @@ class Generator
         $serviceGenerator->setExtendedClass('SwaggerApi');
         $serviceGenerator->addUse('Reload\\Prancer\\SwaggerApi');
         foreach ($api->getApis() as $a) {
-            /** @var ApiDeclarationApi $a */
+            /** @var ApiDeclaration\Api $a */
             foreach ($a->getOperations() as $operation) {
-                $methodGenerator = $this->generateMethod($operation, $api);
+                $methodGenerator = $this->generateMethod($operation, $a);
 
                 $serviceGenerator->addMethodFromGenerator($methodGenerator);
             }
@@ -158,7 +158,7 @@ class Generator
      * @param ApiDeclaration $api
      * @return MethodGenerator
      */
-    protected function generateMethod(Operation $operation, ApiDeclaration $api)
+    protected function generateMethod(Operation $operation, ApiDeclaration\Api $api)
     {
         $methodGenerator = new MethodGenerator();
         $methodGenerator->setName($operation->getNickname());
@@ -206,7 +206,7 @@ class Generator
         $body = array();
 
         // Create new request.
-        $body[] = '$request = $this->newRequest("' . $operation->getMethod() . '", "' . $api->getResourcePath() . '");';
+        $body[] = '$request = $this->newRequest("' . $operation->getMethod() . '", "' . $api->getPath() . '");';
 
         // Assemble parameters for making the request.
         foreach ($operation->getParameters() as $parameter) {

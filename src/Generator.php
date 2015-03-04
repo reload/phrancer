@@ -11,6 +11,7 @@ use Swagger\ResourceListing\Api as ResourceListingApi;
 use Swagger\ApiDeclaration\Api\Operation;
 use Swagger\ApiDeclaration\Api\Operation\Parameter;
 use Zend\Code\Generator\ClassGenerator;
+use Zend\Code\Generator\DocBlock\Tag\GenericTag;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
 use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
 use Zend\Code\Generator\DocBlock\Tag\ReturnTag;
@@ -269,6 +270,7 @@ class Generator
         $docBlockGenerator = new DocBlockGenerator();
         $docBlockGenerator->setShortDescription($model->getDescription());
 
+        $required = $model->getRequired();
         foreach ($model->getProperties() as $property) {
             /** @var Property $property */
             $propertyGenerator = new PropertyGenerator();
@@ -284,6 +286,12 @@ class Generator
             $propertyTag->setDescription($property->getDescription());
             $docBlockGenerator = new DocBlockGenerator();
             $docBlockGenerator->setTag($propertyTag);
+
+            if ($required && in_array($property->getName(), $required)) {
+                $requiredTag = new GenericTag('required');
+                $docBlockGenerator->setTag($requiredTag);
+            }
+
             $propertyGenerator->setDocBlock($docBlockGenerator);
 
             $classGenerator->addPropertyFromGenerator($propertyGenerator);

@@ -153,8 +153,8 @@ class SwaggerApiRequest
         foreach ($this->parameters['path'] as $name => $value) {
             // We could coerce the value into a string, but it's not
             // clearly defined how we should do it.
-            if (!is_string($value)) {
-                throw new \RuntimeException('Path parameter "' . $name . '" not string.');
+            if (!is_scalar($value)) {
+                throw new \RuntimeException('Path parameter "' . $name . '" not scalar.');
             }
             $path_replacements['{' . $name . '}' ] = $value;
         }

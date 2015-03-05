@@ -159,7 +159,7 @@ class SwaggerApiRequest
             $path_replacements['{' . $name . '}' ] = $value;
         }
 
-        $url = $this->endpoint . strtr($this->path, $path_replacements);
+        $url = $this->endpoint . strtr(ltrim($this->path, '/'), $path_replacements);
 
         // Handle query parameters.
         $query = $this->buildQuery($this->parameters['query']);

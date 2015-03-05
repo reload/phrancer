@@ -276,16 +276,19 @@ class Generator
             $propertyGenerator = new PropertyGenerator();
             $propertyGenerator->setName($property->getName());
 
-            $propertyTag = new PropertyTag();
-            $propertyTag->setPropertyName($property->getName());
+            // You'd think that, as Zend code supports the badly
+            // named @property tag (used for documenting "magic" properties of
+            // classes), it would support the much more common @var tag (used
+            // to document vars and class properties), but no. We have to
+            // create it by hand with GenericTag.
+            $varTag = new GenericTag('var');
             $type = $property->getType();
             if ($type === 'array') {
                 $type = $property->getItems() . '[]';
             }
-            $propertyTag->setTypes($type);
-            $propertyTag->setDescription($property->getDescription());
+            $varTag->setContent($type . ' ' . $property->getDescription());
             $docBlockGenerator = new DocBlockGenerator();
-            $docBlockGenerator->setTag($propertyTag);
+            $docBlockGenerator->setTag($varTag);
 
             if ($required && in_array($property->getName(), $required)) {
                 $requiredTag = new GenericTag('required');

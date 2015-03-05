@@ -283,6 +283,20 @@ class Generator
             // create it by hand with GenericTag.
             $varTag = new GenericTag('var');
             $type = $property->getType();
+
+            // Swagger has a "number" datatype, which is either float or
+            // double, depending on the format key. As PHP uses doubles, we
+            // just cast the value. However, anyone using numbers for money
+            // should be alert. We can't do much about the input value here,
+            // as the other side probably already made it fit a double, but
+            // any calculations might have to be done using arbitary precision
+            // ( http://php.net/manual/en/ref.bc.php ) to eliminate possible
+            // rounding errors. Doubters can try this: sprintf("%.20F", 0.01 +
+            // 0.02);
+            if ($type == 'number') {
+                $type = 'float';
+            }
+
             if ($type === 'array') {
                 $type = $property->getItems() . '[]';
             }

@@ -49,7 +49,7 @@ class Generator
             empty($this->namespace) ||
             empty($this->clientNamespace) ||
             empty($this->modelNamespace)) {
-            throw new RuntimeException('Bad arguments for generator.');
+            throw new \RuntimeException('Bad arguments for generator.');
         }
     }
 

@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+if (empty($argv[1])) {
+    print "usage " . $argv[0] . " [output dir]\n";
+    exit();
+}
+
+$output = $argv[1];
+
+$generator = new Reload\Prancer\Generator(array(
+  'inputFile' => 'externalapidocs/service.json',
+  'outputDir' => $output,
+  'namespace' => 'FBS',
+  'modelNamespace' => 'FBS\\Model',
+));
+$generator->generate();

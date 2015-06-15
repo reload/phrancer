@@ -218,6 +218,7 @@ class Generator
         }
 
         // Map each response code to models.
+        $code = 200;
         switch ($operation->getType()) {
             case 'array':
                 $model = 'array(' . var_export($this->fullNamespace($this->modelNamespace) . $operation->getItems(), true) . ')';
@@ -225,6 +226,8 @@ class Generator
 
             case 'void':
                 $model = 'null';
+                // Empty responses should return 204 No Content instead of 200.
+                $code = 204;
                 break;
 
             default:
@@ -232,7 +235,7 @@ class Generator
         }
 
         $body[] = '';
-        $body[] = '$request->defineResponse(200, "", ' . $model . ');';
+        $body[] = '$request->defineResponse(' . $code . ', "", ' . $model . ');';
 
         if ($repsonseMessages = $operation->getResponseMessages()) {
             foreach ($operation->getResponseMessages() as $responseMessage) {

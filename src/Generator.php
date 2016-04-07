@@ -383,6 +383,8 @@ class Generator
             'Serializer.php',
             'SwaggerApi.php',
             'SwaggerApiRequest.php',
+            'SwaggerApiError.php',
+            'SwaggerApiExtendedError.php',
         );
 
         foreach ($files as $file) {

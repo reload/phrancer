@@ -112,7 +112,7 @@ class SwaggerApiRequest
     public function addParameter($type, $name, $value)
     {
         if (!in_array($type, array('path', 'query', 'body'))) {
-            throw new \RuntimeException('Invalid parameter type "' . $type . '"');
+            throw new SwaggerApiError('Invalid parameter type "' . $type . '"');
         }
 
         $this->parameters[$type][$name] = $value;
@@ -139,7 +139,11 @@ class SwaggerApiRequest
         if ($statusCode[0] == "2") {
             return $model ? $model : $message;
         }
-        throw new \RuntimeException($message, $statusCode);
+        if ($model) {
+            throw new SwaggerApiExtendedError($model, $message, $statusCode);
+        } else {
+            throw new SwaggerApiError($message, $statusCode);
+        }
     }
 
     /**
@@ -155,7 +159,7 @@ class SwaggerApiRequest
             // We could coerce the value into a string, but it's not
             // clearly defined how we should do it.
             if (!is_scalar($value)) {
-                throw new \RuntimeException('Path parameter "' . $name . '" not scalar.');
+                throw new SwaggerApiError('Path parameter "' . $name . '" not scalar.');
             }
             $path_replacements['{' . $name . '}' ] = $value;
         }

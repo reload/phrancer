@@ -66,11 +66,13 @@ class SwaggerApiRequest
         $this->path = $path;
     }
 
-    public function getMethod() {
+    public function getMethod()
+    {
         return $this->method;
     }
 
-    public function getPath() {
+    public function getPath()
+    {
         return $this->path;
     }
 
@@ -212,8 +214,7 @@ class SwaggerApiRequest
                 foreach ($value as $item) {
                     $encoded[] = urlencode($name) . '=' . urlencode($item);
                 }
-            }
-            else {
+            } else {
                 $encoded[] = urlencode($name) . '=' . urlencode($value);
             }
         }

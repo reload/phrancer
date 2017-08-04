@@ -274,6 +274,7 @@ class Generator
         $docBlockGenerator->setShortDescription($model->getDescription());
 
         $required = $model->getRequired();
+        $required = $required ? $required : [];
         foreach ($model->getProperties() as $property) {
             /** @var Property $property */
             $propertyGenerator = new PropertyGenerator();
@@ -303,11 +304,15 @@ class Generator
             if ($type === 'array') {
                 $type = $property->getItems() . '[]';
             }
+            if (!in_array($property->getName(), $required)) {
+                $type .= '|null';
+            }
+
             $varTag->setContent($type . ' ' . $property->getDescription());
             $docBlockGenerator = new DocBlockGenerator();
             $docBlockGenerator->setTag($varTag);
 
-            if ($required && in_array($property->getName(), $required)) {
+            if (in_array($property->getName(), $required)) {
                 $requiredTag = new GenericTag('required');
                 $docBlockGenerator->setTag($requiredTag);
             }
